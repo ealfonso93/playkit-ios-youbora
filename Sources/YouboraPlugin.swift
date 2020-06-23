@@ -34,6 +34,7 @@ public class YouboraPlugin: BasePlugin, AppStateObservable {
     /// otherwise youbora will wait for /stop event and you could not start new content events until /stop is received.
     private var pkYouboraPlayerAdapter: PKYouboraPlayerAdapter?
     private var pkYouboraAdsAdapter: PKYouboraAdsAdapter?
+    private var customAdAdapter: YBPlayerAdapter<AnyObject>?
     private var ybPlugin: YBPlugin?
     
     /// The plugin's config
@@ -69,10 +70,20 @@ public class YouboraPlugin: BasePlugin, AppStateObservable {
         
         PKLog.debug("Start monitoring Youbora")
         ybPlugin = YBPlugin(options: youboraConfig?.options(), andAdapter: pkYouboraPlayerAdapter)
-        ybPlugin?.adsAdapter = pkYouboraAdsAdapter
+        if customAdAdapter != nil {
+            ybPlugin?.adsAdapter = customAdAdapter
+        } else {
+            ybPlugin?.adsAdapter = pkYouboraAdsAdapter
+        }
+        
 
         // Monitor app state changes
         AppStateSubject.shared.add(observer: self)
+    }
+    
+    public convenience init(player: Player, pluginConfig: Any?, messageBus: MessageBus, adAdapter: YBPlayerAdapter<AnyObject>) throws {
+        try self.init(player: player, pluginConfig: pluginConfig, messageBus: messageBus)
+        customAdAdapter = adAdapter
     }
     
     public override func onUpdateMedia(mediaConfig: MediaConfig) {
